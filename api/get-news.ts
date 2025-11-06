@@ -28,11 +28,39 @@ function parseRSS(xml: string) {
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
 
+    // Helper to decode HTML entities in a Node.js environment
+    const decodeEntities = (encodedString: string): string => {
+        if (!encodedString) return '';
+        // A minimal decoder for numeric entities and common named entities
+        return encodedString.replace(/&#(\d+);/g, (match, dec) => {
+            return String.fromCharCode(dec);
+        }).replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#0*39;/g, "'");
+    };
+
     while ((match = itemRegex.exec(xml)) !== null) {
         const itemContent = match[1];
         
-        // Extract fields using regex, supporting CDATA sections and allowing whitespace around them.
-        const title = itemContent.match(/<title>\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*<\/title>/)?.[1]?.trim();
+        // --- FIX: Robust title parsing ---
+        // Handles titles that are plain text or wrapped in CDATA.
+        const rawTitleMatch = itemContent.match(/<title>([\s\S]*?)<\/title>/);
+        let title: string | undefined = undefined;
+
+        if (rawTitleMatch && rawTitleMatch[1]) {
+            let rawTitle = rawTitleMatch[1].trim();
+            // Check if content is wrapped in CDATA and extract it
+            if (rawTitle.startsWith('<![CDATA[') && rawTitle.endsWith(']]>')) {
+                title = rawTitle.substring(9, rawTitle.length - 3).trim();
+            } else {
+                title = rawTitle;
+            }
+            // Decode any HTML entities present in the title
+            title = decodeEntities(title);
+        }
+
         const link = itemContent.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
         const rawDescription = itemContent.match(/<description>\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*<\/description>/)?.[1]?.trim();
         const pubDate = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();

@@ -1,0 +1,5 @@
+{
+  "name": "Greek News Feed API Client",
+  "description": "A simple application that fetches and displays the latest news from a Greek RSS feed via a Vercel serverless API. It showcases how to build a frontend for a serverless backend.",
+  "requestFramePermissions": []
+}

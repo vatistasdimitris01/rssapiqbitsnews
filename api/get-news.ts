@@ -1,4 +1,3 @@
-
 // Vercel Serverless Function to fetch and parse an RSS feed.
 // This function lives in the `api/` directory and becomes an API endpoint.
 
@@ -32,10 +31,10 @@ function parseRSS(xml: string) {
     while ((match = itemRegex.exec(xml)) !== null) {
         const itemContent = match[1];
         
-        // Extract fields using regex, supporting CDATA sections.
-        const title = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/)?.[1]?.trim();
+        // Extract fields using regex, supporting CDATA sections and allowing whitespace around them.
+        const title = itemContent.match(/<title>\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*<\/title>/)?.[1]?.trim();
         const link = itemContent.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
-        const rawDescription = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/)?.[1]?.trim();
+        const rawDescription = itemContent.match(/<description>\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*<\/description>/)?.[1]?.trim();
         const pubDate = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
         const imageUrl = itemContent.match(/<enclosure url="([^"]*)"/)?.[1];
 

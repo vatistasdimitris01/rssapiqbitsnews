@@ -102,10 +102,10 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-8">
             <header className="text-center mb-10">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white">
-                    Latest Greek News
+                    Kathimerini News Feed
                 </h1>
                 <p className="text-lg text-gray-500 dark:text-gray-300 mt-2">
-                    Fetched from a live RSS feed via a Vercel API
+                    Latest news from kathimerini.gr, fetched via a Vercel API
                 </p>
             </header>
             

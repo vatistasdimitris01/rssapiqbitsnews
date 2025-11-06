@@ -13,7 +13,7 @@ interface VercelResponse {
 }
 
 // The target RSS feed URL
-const RSS_URL = 'https://www.news.gr/rss.ashx?colid=2';
+const RSS_URL = 'https://www.kathimerini.gr/infeeds/rss/nx-rss-feed.xml';
 
 /**
  * A simple, dependency-free RSS parser using regular expressions.
@@ -44,32 +44,37 @@ function parseRSS(xml: string) {
     while ((match = itemRegex.exec(xml)) !== null) {
         const itemContent = match[1];
         
-        // --- FIX: Robust title parsing ---
         // Handles titles that are plain text or wrapped in CDATA.
         const rawTitleMatch = itemContent.match(/<title>([\s\S]*?)<\/title>/);
         let title: string | undefined = undefined;
 
         if (rawTitleMatch && rawTitleMatch[1]) {
             let rawTitle = rawTitleMatch[1].trim();
-            // Check if content is wrapped in CDATA and extract it
             if (rawTitle.startsWith('<![CDATA[') && rawTitle.endsWith(']]>')) {
                 title = rawTitle.substring(9, rawTitle.length - 3).trim();
             } else {
                 title = rawTitle;
             }
-            // Decode any HTML entities present in the title
             title = decodeEntities(title);
         }
 
         const link = itemContent.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
-        const rawDescription = itemContent.match(/<description>\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*<\/description>/)?.[1]?.trim();
+        
+        // Handles descriptions that are plain text or wrapped in CDATA.
+        const descriptionMatch = itemContent.match(/<description>([\s\S]*?)<\/description>/);
+        let rawDescription = descriptionMatch ? descriptionMatch[1].trim() : '';
+        if (rawDescription.startsWith('<![CDATA[')) {
+             rawDescription = rawDescription.substring(9, rawDescription.length - 3).trim();
+        }
+        // FIX: Corrected a buggy regex used for stripping HTML tags. The '?' was making the closing '>' optional, which could lead to incorrect stripping of partial tags.
+        const description = rawDescription ? decodeEntities(rawDescription).replace(/<[^>]*>/gm, '').trim() : '';
+
         const pubDate = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
-        const imageUrl = itemContent.match(/<enclosure url="([^"]*)"/)?.[1];
+        
+        // Extract image URL from <media:thumbnail> tag
+        const imageUrl = itemContent.match(/<media:thumbnail url="([^"]*)"/)?.[1];
 
         if (title && link && pubDate) {
-            // Clean up the description by removing HTML tags.
-            const description = rawDescription ? rawDescription.replace(/<[^>]*>?/gm, '').trim() : '';
-
             items.push({
                 title,
                 link,
@@ -113,3 +118,7 @@ export default async function handler(
     res.status(500).json({ error: 'Failed to fetch or parse RSS feed', details: errorMessage });
   }
 }
+]]></content>
+  </change>
+</changes>
+```
